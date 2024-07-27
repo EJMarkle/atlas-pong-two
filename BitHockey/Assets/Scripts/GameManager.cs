@@ -32,7 +32,7 @@ public class GameManager : MonoBehaviour
         bool aiEnabled = PlayerPrefs.GetInt("AIEnabled", 0) == 1;
         aiPlayer.SetActive(aiEnabled);
 
-        AudioManager.Instance.PlayBackgroundMusic();
+        // AudioManager.Instance.PlayBackgroundMusic();
     }
 
     private void Update()

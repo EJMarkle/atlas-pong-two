@@ -6,6 +6,7 @@ using UnityEngine;
 /// <summary>
 /// AIPlayer class which holds cpu emeny logic
 /// </summary>
+/**
 public class AIPlayer : MonoBehaviour
 {
     private Paddle paddle;
@@ -78,3 +79,4 @@ public class AIPlayer : MonoBehaviour
         paddle.MovePaddle(direction);
     }
 }
+**/ 

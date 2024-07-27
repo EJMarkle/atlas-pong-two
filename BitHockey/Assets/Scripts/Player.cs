@@ -1,33 +1,34 @@
 using UnityEngine;
- 
+using UnityEngine.UI;
 
-// Player class which handles gets input for paddle movement 
 public class Player : MonoBehaviour
 {
-    public KeyCode upKey;
-    public KeyCode downKey;
-
+    public bool isLeftPlayer = true; // Set this in the inspector for each player
     private Paddle paddle;
+    private Camera mainCamera;
 
-    // init paddle component
     void Start()
     {
         paddle = GetComponent<Paddle>();
+        mainCamera = Camera.main;
     }
     
-    // Check for user up or down input
     void Update()
     {
-        float direction = 0;
-        if (Input.GetKey(upKey))
+        Vector3 mousePosition = Input.mousePosition;
+        Vector3 worldPosition = mainCamera.ScreenToWorldPoint(mousePosition);
+        worldPosition.z = 0; // Ensure the z-position is 0 for 2D
+
+        // Restrict x-position based on which player this is
+        if (isLeftPlayer)
         {
-            direction = 1;
+            worldPosition.x = Mathf.Min(worldPosition.x, 0); // Left side of screen
         }
-        else if (Input.GetKey(downKey))
+        else
         {
-            direction = -1;
+            worldPosition.x = Mathf.Max(worldPosition.x, 0); // Right side of screen
         }
-        
-        paddle.MovePaddle(direction);
+
+        paddle.MovePaddleToPosition(worldPosition);
     }
 }
