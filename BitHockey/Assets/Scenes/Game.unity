@@ -413,7 +413,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   initialSpeed: 750
   paddleForceMultiplier: 0.1
-  maxVelocity: 1800
+  maxVelocity: 2000
   slowLimit: 1.1
   slowdownFactor: 0.9998
 --- !u!1 &329733320
@@ -1950,7 +1950,7 @@ RectTransform:
   m_GameObject: {fileID: 1941735187}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.2, y: 1.2, z: 1.2}
+  m_LocalScale: {x: 1.4, y: 1.4, z: 1.4}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1877793929}
@@ -2048,7 +2048,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64fed299a5753ca44aecb4e472efb404, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 1500
+  moveSpeed: 1000
   boundaryPadding: 75
   playSpace: {fileID: 48156194}
 --- !u!114 &1941735195
@@ -2097,7 +2097,7 @@ RectTransform:
   m_GameObject: {fileID: 1947848199}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.2, y: 1.2, z: 1.2}
+  m_LocalScale: {x: 1.4, y: 1.4, z: 1.4}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1877793929}
@@ -2500,7 +2500,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2142069513
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2635,15 +2635,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6108059407864067099, guid: 545a962bc13d77c46b771264ecdab9ef, type: 3}
       propertyPath: m_LocalScale.x
-      value: 2.42
+      value: 3.9
       objectReference: {fileID: 0}
     - target: {fileID: 6108059407864067099, guid: 545a962bc13d77c46b771264ecdab9ef, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2.42
+      value: 3.9
       objectReference: {fileID: 0}
     - target: {fileID: 6108059407864067099, guid: 545a962bc13d77c46b771264ecdab9ef, type: 3}
       propertyPath: m_LocalScale.z
-      value: 2.42
+      value: 3.9
       objectReference: {fileID: 0}
     - target: {fileID: 6108059407864067099, guid: 545a962bc13d77c46b771264ecdab9ef, type: 3}
       propertyPath: m_LocalPosition.x
