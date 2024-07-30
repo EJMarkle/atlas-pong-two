@@ -13,6 +13,8 @@ TagManager:
   - Sides
   - Paddle1
   - Paddle2
+  - Ball
+  - PlaySpace
   layers:
   - Default
   - TransparentFX

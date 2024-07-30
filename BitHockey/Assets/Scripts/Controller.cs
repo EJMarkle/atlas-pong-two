@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-
 public class Controller : MonoBehaviour
 {
     [SerializeField] private HPaddle paddleScript;
+    [SerializeField] private RectTransform playSpaceL; // Add this line
     private Canvas canvas;
     private Camera mainCamera;
 
@@ -14,6 +14,7 @@ public class Controller : MonoBehaviour
     {
         canvas = GetComponentInParent<Canvas>();
         mainCamera = Camera.main;
+        paddleScript.SetPlaySpace(playSpaceL); // Add this line
     }
 
     private void Update()

@@ -1,82 +1,49 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
-
-/// <summary>
-/// AIPlayer class which holds cpu emeny logic
-/// </summary>
-/**
 public class AIPlayer : MonoBehaviour
 {
-    private Paddle paddle;
-    private Player playerScript;
-    private Ball ball;
-    
-    [SerializeField] private float deadzone = 70f;
+    [SerializeField] private HPaddle paddleScript;
+    [SerializeField] private RectTransform playSpaceR;
+    [SerializeField] private GameObject puck;
+    [SerializeField] private float moveSpeed = 10f;
+    [SerializeField] private float rightSideThreshold = 0f; // X-coordinate that determines the right side of the screen
 
-    private void OnEnable()
+    private RectTransform rectTransform;
+    private Canvas canvas;
+    private RectTransform puckRectTransform;
+
+    private void Awake()
     {
-        SetupAI();
-        deadzone = PlayerPrefs.GetFloat("AIDeadzone", 70f);
+        rectTransform = GetComponent<RectTransform>();
+        canvas = GetComponentInParent<Canvas>();
+        puckRectTransform = puck.GetComponent<RectTransform>();
+        paddleScript.SetPlaySpace(playSpaceR);
     }
 
-    private void Start()
-    {
-        SetupAI();
-    }
-
-    // Get components and disable player scripts
-    private void SetupAI()
-    {
-        paddle = GetComponentInParent<Paddle>();
-        if (paddle == null)
-        {
-            enabled = false;
-            return;
-        }
-
-        playerScript = GetComponentInParent<Player>();
-        if (playerScript != null)
-        {
-            playerScript.enabled = false;
-        }
-
-        ball = FindObjectOfType<Ball>();
-        if (ball == null)
-        {
-            enabled = false;
-        }
-    }
-
-    // Call MovePaddleTowardsBall() every frame
     private void Update()
     {
-        if (paddle != null && ball != null)
+        Vector2 targetPosition;
+
+        if (IsPuckOnRightSide())
         {
-            MovePaddleTowardsBall();
+            // Offensive mode: move towards the puck
+            targetPosition = new Vector2(puckRectTransform.anchoredPosition.x, puckRectTransform.anchoredPosition.y);
         }
+        else
+        {
+            // Defensive mode: stay on the right, mirror puck's Y position
+            float rightX = playSpaceR.anchoredPosition.x + (playSpaceR.rect.width / 2) - paddleScript.boundaryPadding;
+            targetPosition = new Vector2(rightX, puckRectTransform.anchoredPosition.y);
+        }
+
+        paddleScript.Move(targetPosition);
     }
 
-    // Paddle paths to ball's y position w deadzone and reaction speed var
-    private void MovePaddleTowardsBall()
+    private bool IsPuckOnRightSide()
     {
-        float paddleY = paddle.transform.position.y;
-        float ballY = ball.transform.position.y;
-        
-        float difference = ballY - paddleY;
-
-        if (Mathf.Abs(difference) < deadzone)
-        {
-            paddle.MovePaddle(0);
-            return;
-        }
-
-        float direction = Mathf.Sign(difference);
-
-        float moveAmount = direction * Time.deltaTime;
-
-        paddle.MovePaddle(direction);
+        return puckRectTransform.anchoredPosition.x > rightSideThreshold;
     }
 }
-**/ 

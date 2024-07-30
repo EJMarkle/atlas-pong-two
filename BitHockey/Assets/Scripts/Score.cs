@@ -1,45 +1,35 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
- 
 
-/// <summary>
-/// Class for enabling score functionality
-/// </summary>
 public class Score : MonoBehaviour
 {
+    private int score = 0;
     public TextMeshProUGUI scoreText;
-    private int currentScore = 0;
 
-    // Call UpdateScore every frame
-    void Start()
-    {
-        UpdateScore();
-    }
-
-    // Score incrementer
     public void IncrementScore()
     {
-        currentScore++;
-        UpdateScore();
+        score++;
+        UpdateScoreText();
     }
 
-    // Update score display
-    private void UpdateScore()
-    {
-        scoreText.text = currentScore.ToString();
-    }
-
-    // Get score method
     public int GetScore()
     {
-        return currentScore;
+        return score;
+    }
+ 
+    public void ResetScore()
+    {
+        score = 0;
+        UpdateScoreText();
     }
 
-    // Changes text color
     public void SetScoreColor(Color color)
     {
         scoreText.color = color;
+    }
+
+    private void UpdateScoreText()
+    {
+        scoreText.text = score.ToString();
     }
 }

@@ -1,84 +1,90 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using UnityEngine.SceneManagement;
-using System.Collections;
 
-
-/// <summary>
-/// GameManager class, handles game logic
-/// </summary>
 public class GameManager : MonoBehaviour
 {
+    public GameObject hockeyPaddleTwo;
+    public Puck puck;
     public Score leftScore;
     public Score rightScore;
-    public Ball ball;
-    public Paddle leftPaddle;
-    public Paddle rightPaddle;
-    public int winningScore = 11;
-    public bool GameEnded { get { return gameEnded; } }
+    public int winningScore = 5;
 
-    public Color winnerColor = Color.green;
-    public Color loserColor = Color.red;
     public GameObject gameCompleteObject;
     public TextMeshProUGUI gameCompleteText;
-    public float flashInterval = 0.5f;
-    public GameObject aiPlayer;
-    private bool gameEnded = false;
-    private bool isListeningForRestart = false;
+    public Color winnerColor = Color.green;
+    public Color loserColor = Color.red;
 
-    // Check if AI should be enabled
+    private bool gameEnded = false;
+
+    // Public property to check if the game has ended
+    public bool GameEnded => gameEnded;
+
     private void Start()
     {
-        bool aiEnabled = PlayerPrefs.GetInt("AIEnabled", 0) == 1;
-        aiPlayer.SetActive(aiEnabled);
-
-        // AudioManager.Instance.PlayBackgroundMusic();
+        SetupGame();
     }
 
-    private void Update()
+    private void SetupGame()
     {
-        if (isListeningForRestart && Input.GetKeyDown(KeyCode.Escape))
-        {
-            ReturnToMenu();
-        }
+        // Enable AIPlayer and disable Player2Controller
+        AIPlayer aiPlayer = hockeyPaddleTwo.GetComponent<AIPlayer>();
+        Player2Controller player2Controller = hockeyPaddleTwo.GetComponent<Player2Controller>();
+
+        if (aiPlayer != null) aiPlayer.enabled = true;
+        if (player2Controller != null) player2Controller.enabled = false;
+
+        // Reset scores
+        leftScore.ResetScore();
+        rightScore.ResetScore();
+
+        // Hide game complete UI
+        gameCompleteObject.SetActive(false);
+
+        // Reset puck
+        // ResetPuck();
+
+        // Reset game ended flag
+        gameEnded = false;
     }
 
-    // Score counter and triggers win sequence upon a winning score
-    public void ScorePoint(bool leftPlayerScored)
+    // private void ResetPuck()
+    //{
+    //    puck.transform.position = Vector2.zero;
+    //    Debug.Log("ResetPuck: Puck position set to center: " + puck.transform.position);
+    //    puck.LaunchPuck();
+    //}
+
+    // Method to handle scoring points
+    public void ScorePoint(bool isLeftGoal)
     {
         if (gameEnded) return;
 
-        if (leftPlayerScored)
-        {
-            leftScore.IncrementScore();
-            if (leftScore.GetScore() >= winningScore)
-            {
-                WinSequence(true);
-            }
-        }
-        else
+        if (isLeftGoal)
         {
             rightScore.IncrementScore();
             if (rightScore.GetScore() >= winningScore)
             {
-                WinSequence(false);
+                EndGame(false);
+            }
+        }
+        else
+        {
+            leftScore.IncrementScore();
+            if (leftScore.GetScore() >= winningScore)
+            {
+                EndGame(true);
             }
         }
 
         if (!gameEnded)
         {
-            ResetBall();
+        //    ResetPuck();
         }
     }
- 
-    // Resets ball
-    private void ResetBall()
-    {
-        ball.ResetPosition();
-    }
 
-    // Paints winner score green and loser score red and stops ball and paddle movement
-    private void WinSequence(bool leftPlayerWon)
+    private void EndGame(bool leftPlayerWon)
     {
         gameEnded = true;
 
@@ -86,40 +92,46 @@ public class GameManager : MonoBehaviour
         {
             leftScore.SetScoreColor(winnerColor);
             rightScore.SetScoreColor(loserColor);
+            gameCompleteText.text = "Left Player Wins!";
         }
         else
         {
             rightScore.SetScoreColor(winnerColor);
             leftScore.SetScoreColor(loserColor);
+            gameCompleteText.text = "Right Player Wins!";
         }
-
-        ball.StopMovement();
-
-        leftPaddle.FreezePaddle();
-        rightPaddle.FreezePaddle();
 
         gameCompleteObject.SetActive(true);
-        StartCoroutine(FlashText());
-
-        isListeningForRestart = true;
+        puck.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
     }
 
-    private void ReturnToMenu()
+    // Method to handle when a goal is scored
+    public void OnGoalScored(bool isLeftGoal)
     {
-        SceneManager.LoadScene("Menu");
+        ScorePoint(isLeftGoal);
     }
 
-    private IEnumerator FlashText()
+    // Method to restart the game
+    public void RestartGame()
     {
-        while (true)
+        SetupGame();
+    }
+
+    // Method to toggle between single-player and multiplayer mode
+    public void SetGameMode(bool isSinglePlayer)
+    {
+        AIPlayer aiPlayer = hockeyPaddleTwo.GetComponent<AIPlayer>();
+        Player2Controller player2Controller = hockeyPaddleTwo.GetComponent<Player2Controller>();
+
+        if (isSinglePlayer)
         {
-            gameCompleteText.enabled = !gameCompleteText.enabled;
-            yield return new WaitForSeconds(flashInterval);
+            if (aiPlayer != null) aiPlayer.enabled = true;
+            if (player2Controller != null) player2Controller.enabled = false;
         }
-    }
-    private void RestartGame()
-    {
-        StopAllCoroutines();
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        else
+        {
+            if (aiPlayer != null) aiPlayer.enabled = false;
+            if (player2Controller != null) player2Controller.enabled = true;
+        }
     }
 }

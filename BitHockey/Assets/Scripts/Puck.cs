@@ -1,14 +1,15 @@
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Puck : MonoBehaviour
 {
     [SerializeField] private float initialSpeed = 10f;
     [SerializeField] private float paddleForceMultiplier = 0.2f; // Adjust this value as needed to balance the gameplay
+    [SerializeField] public float maxVelocity = 20f; // Maximum velocity for the puck
+    [SerializeField] public float slowLimit = 2f; // Velocity limit to trigger the slowdown
+    [SerializeField] private float slowdownFactor = 0.99f; // Factor to control the rate of slowdown
 
     private Rigidbody2D rb;
 
@@ -20,6 +21,11 @@ public class Puck : MonoBehaviour
     private void Start()
     {
         LaunchPuck();
+    }
+
+    private void Update()
+    {
+        ApplySlowdown();
     }
 
     private void OnTriggerEnter2D(Collider2D collider)
@@ -40,37 +46,54 @@ public class Puck : MonoBehaviour
 
     private void ReflectOffPaddle(Collider2D paddleCollider)
     {
-        Rigidbody2D paddleRb = paddleCollider.GetComponent<Rigidbody2D>();
+        HPaddle paddleScript = paddleCollider.GetComponent<HPaddle>();
 
-        if (paddleRb != null)
+        if (paddleScript != null)
         {
-            Vector2 hitPoint = paddleCollider.ClosestPoint(transform.position);
-            Vector2 paddleCenter = paddleCollider.bounds.center;
+            Vector2 paddleVelocity = paddleScript.GetCurrentVelocity();
+            Vector2 puckVelocity = rb.velocity;
 
-            // Calculate hit direction
-            Vector2 hitDirection = ((Vector2)transform.position - paddleCenter).normalized;
+            // Reflect the puck's direction based on the collision normal
+            Vector2 normal = ((Vector2)transform.position - (Vector2)paddleCollider.bounds.center).normalized;
+            Vector2 reflection = Vector2.Reflect(puckVelocity, normal);
 
-            // Get paddle velocity
-            Vector2 paddleVelocity = paddleRb.velocity;
-
-            // Reflect the puck's direction based on the hit point
-            Vector2 newVelocity = hitDirection * initialSpeed;
-
-            // Add paddle's velocity influence to the puck
-            newVelocity += paddleVelocity * paddleForceMultiplier;
-
-            // Ensure the puck's speed does not drop below a minimum threshold
-            if (newVelocity.magnitude < initialSpeed)
+            // Check if the paddle's speed is at or below the slowLimit
+            if (paddleVelocity.magnitude <= slowLimit)
             {
-                newVelocity = newVelocity.normalized * initialSpeed;
+                // Quarter the puck's velocity
+                rb.velocity = reflection.normalized * (puckVelocity.magnitude / 4f);
             }
+            else
+            {
+                // Calculate new speed based on the paddle's speed
+                float speedMultiplier = 1 + (paddleVelocity.magnitude * paddleForceMultiplier);
+                Vector2 newVelocity = reflection.normalized * (puckVelocity.magnitude * speedMultiplier);
 
-            rb.velocity = newVelocity;
+                // Clamp the new velocity to the maxVelocity
+                if (newVelocity.magnitude > maxVelocity)
+                {
+                    newVelocity = newVelocity.normalized * maxVelocity;
+                }
+
+                rb.velocity = newVelocity;
+            }
         }
         else
         {
             // Fallback to simple reflection if there's no Rigidbody2D
             rb.velocity = -rb.velocity;
+        }
+    }
+
+    private void ApplySlowdown()
+    {
+        if (rb.velocity.magnitude > 0.1f) // Apply slowdown only if the puck is moving
+        {
+            rb.velocity *= slowdownFactor;
+        }
+        else
+        {
+            rb.velocity = Vector2.zero; // Stop the puck completely if the velocity is very low
         }
     }
 
