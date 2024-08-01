@@ -1,49 +1,95 @@
+using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 
+
+/// <summary>
+/// Puck class, handles puck reflections and triggers
+/// </summary>
 public class Puck : MonoBehaviour
 {
     [SerializeField] private float initialSpeed = 10f;
-    [SerializeField] private float paddleForceMultiplier = 0.2f; // Adjust this value as needed to balance the gameplay
-    [SerializeField] public float maxVelocity = 20f; // Maximum velocity for the puck
-    [SerializeField] public float slowLimit = 2f; // Velocity limit to trigger the slowdown
-    [SerializeField] private float slowdownFactor = 0.99f; // Factor to control the rate of slowdown
+    [SerializeField] private float paddleForceMultiplier = 0.2f;
+    [SerializeField] public float maxVelocity = 20f;
+    [SerializeField] public float slowLimit = 2f;
+    [SerializeField] private float slowdownFactor = 0.99f;
+    private GameManager gameManager;
+    private GameObject puckLight;
 
     private Rigidbody2D rb;
+    private Camera mainCamera;
+    private Collider2D puckCollider;
+    private AudioManager audioManager;
 
+    // inits
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        puckCollider = GetComponent<Collider2D>();
+        gameManager = FindObjectOfType<GameManager>();
+        mainCamera = Camera.main;
+        puckLight = transform.Find("PuckLight").gameObject;
+        puckLight.SetActive(false);
     }
 
+    // launch puck and start audio
     private void Start()
     {
         LaunchPuck();
+        audioManager = AudioManager.Instance;
     }
 
+    // apply constyant slowdown to puck
     private void Update()
     {
         ApplySlowdown();
     }
 
+    // triggers
     private void OnTriggerEnter2D(Collider2D collider)
     {
-        if (collider.CompareTag("Edges"))
-        {
-            rb.velocity = new Vector2(rb.velocity.x, -rb.velocity.y);
-        }
-        else if (collider.CompareTag("Paddle"))
-        {
-            ReflectOffPaddle(collider);
-        }
-        else if (collider.CompareTag("Sides"))
-        {
-            rb.velocity = new Vector2(-rb.velocity.x, rb.velocity.y);
+        if (!gameManager.isGameEnded)
+        {   
+            // reset puck w out of bounds method
+            if (collider.CompareTag("Catch"))
+            {
+                Debug.Log("Puck caught, resetting...");
+                gameManager.ResetPuckOutOfBounds();
+            }
+            // screen edge puck collisions
+            else if (collider.CompareTag("Edges") || collider.CompareTag("Sides"))
+            {
+                if (collider.CompareTag("Edges"))
+                {
+                    rb.velocity = new Vector2(rb.velocity.x, -rb.velocity.y);
+                }
+                else
+                {
+                    rb.velocity = new Vector2(-rb.velocity.x, rb.velocity.y);
+                }
+                audioManager.PlayEdgeHitSound();
+                StartCoroutine(FlashPuckLight());
+            }
+            // paddle and puck collisions
+            else if (collider.CompareTag("Paddle"))
+            {
+                ReflectOffPaddle(collider);
+                audioManager.PlayPaddleHitSound();
+                gameManager.TriggerPaddleLight(collider.gameObject);
+                StartCoroutine(FlashPuckLight());
+            }
         }
     }
 
+    // enable "light" gameobject
+    private IEnumerator FlashPuckLight()
+    {
+        puckLight.SetActive(true);
+        yield return new WaitForSeconds(0.10f);
+        puckLight.SetActive(false);
+    }
+
+    // Paddle and puck reflection logic
     private void ReflectOffPaddle(Collider2D paddleCollider)
     {
         HPaddle paddleScript = paddleCollider.GetComponent<HPaddle>();
@@ -78,25 +124,26 @@ public class Puck : MonoBehaviour
                 rb.velocity = newVelocity;
             }
         }
-        else
-        {
-            // Fallback to simple reflection if there's no Rigidbody2D
-            rb.velocity = -rb.velocity;
-        }
+        //else
+        //{
+        //    rb.velocity = -rb.velocity;
+        //}
     }
 
+    // slowdown logic, supposed to feel like an air hockey table
     private void ApplySlowdown()
     {
-        if (rb.velocity.magnitude > 0.1f) // Apply slowdown only if the puck is moving
+        if (rb.velocity.magnitude > 0.1f)
         {
             rb.velocity *= slowdownFactor;
         }
         else
         {
-            rb.velocity = Vector2.zero; // Stop the puck completely if the velocity is very low
+            rb.velocity = Vector2.zero;
         }
     }
 
+    // launch puck slowly in one of four random directions
     public void LaunchPuck()
     {
         Vector2[] directions = new Vector2[]
@@ -111,5 +158,12 @@ public class Puck : MonoBehaviour
         Vector2 initialDirection = directions[randomIndex];
 
         rb.velocity = initialDirection * initialSpeed;
+    }
+
+    // reset puck
+    public void ResetPuckPosition()
+    {
+        transform.position = gameManager.centerSpawnPoint.position;
+        rb.velocity = Vector2.zero;
     }
 }

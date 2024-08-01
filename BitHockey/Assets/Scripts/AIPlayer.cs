@@ -3,18 +3,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+
+/// <summary>
+/// AIPlayer class, gives computer control to other paddle
+/// </summary>
 public class AIPlayer : MonoBehaviour
 {
     [SerializeField] private HPaddle paddleScript;
     [SerializeField] private RectTransform playSpaceR;
     [SerializeField] private GameObject puck;
-    [SerializeField] private float moveSpeed = 10f;
-    [SerializeField] private float rightSideThreshold = 0f; // X-coordinate that determines the right side of the screen
-
+    [SerializeField] private float yPositionDeadzone = 10f;
     private RectTransform rectTransform;
     private Canvas canvas;
     private RectTransform puckRectTransform;
+    private Vector2 targetPosition;
 
+    // inits
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
@@ -23,27 +27,48 @@ public class AIPlayer : MonoBehaviour
         paddleScript.SetPlaySpace(playSpaceR);
     }
 
+    // If puck in play space, attack mode. Otherwise defese mode
     private void Update()
     {
-        Vector2 targetPosition;
-
-        if (IsPuckOnRightSide())
+        if (IsPuckInPlaySpace())
         {
-            // Offensive mode: move towards the puck
-            targetPosition = new Vector2(puckRectTransform.anchoredPosition.x, puckRectTransform.anchoredPosition.y);
+            // Attack mode: move left to intercept the puck
+            if (rectTransform.anchoredPosition.x > puckRectTransform.anchoredPosition.x)
+            {
+                float puckY = puckRectTransform.anchoredPosition.y;
+                float paddleY = rectTransform.anchoredPosition.y;
+
+                if (Mathf.Abs(puckY - paddleY) > yPositionDeadzone)
+                {
+                    targetPosition = new Vector2(puckRectTransform.anchoredPosition.x, puckY);
+                }
+            }
+            else
+            {
+                float rightX = playSpaceR.anchoredPosition.x + (playSpaceR.rect.width / 2) - paddleScript.boundaryPadding;
+                targetPosition = new Vector2(rightX, rectTransform.anchoredPosition.y);
+            }
         }
         else
         {
-            // Defensive mode: stay on the right, mirror puck's Y position
+            // Defense mode: move right and mirror puck's Y position with a deadzone
             float rightX = playSpaceR.anchoredPosition.x + (playSpaceR.rect.width / 2) - paddleScript.boundaryPadding;
-            targetPosition = new Vector2(rightX, puckRectTransform.anchoredPosition.y);
+            float puckY = puckRectTransform.anchoredPosition.y;
+            float paddleY = rectTransform.anchoredPosition.y;
+
+            if (Mathf.Abs(puckY - paddleY) > yPositionDeadzone)
+            {
+                targetPosition = new Vector2(rightX, puckY);
+            }
         }
 
         paddleScript.Move(targetPosition);
     }
 
-    private bool IsPuckOnRightSide()
+    // check if puck is in playspace
+    private bool IsPuckInPlaySpace()
     {
-        return puckRectTransform.anchoredPosition.x > rightSideThreshold;
+        Vector3 viewportPosition = RectTransformUtility.WorldToScreenPoint(canvas.worldCamera, puckRectTransform.position);
+        return RectTransformUtility.RectangleContainsScreenPoint(playSpaceR, viewportPosition, canvas.worldCamera);
     }
 }

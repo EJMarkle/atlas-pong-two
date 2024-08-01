@@ -15,6 +15,7 @@ TagManager:
   - Paddle2
   - Ball
   - PlaySpace
+  - Catch
   layers:
   - Default
   - TransparentFX
